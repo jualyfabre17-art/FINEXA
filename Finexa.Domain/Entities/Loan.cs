@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Security.Principal;
 using System.Text;
 using Finexa.Domain.Enums;
 using Finexa.Domain.ValueObjects;
@@ -17,6 +18,8 @@ namespace Finexa.Domain.Entities
 
         private readonly List<Installment> _installments = new();
         public IReadOnlyCollection<Installment> Installments => _installments.AsReadOnly();
+        private readonly List<Guarantor> _guarantors = new();
+        public IReadOnlyCollection<Guarantor> Guarantors => _guarantors.AsReadOnly();
 
         private Loan() { }
 
@@ -43,15 +46,44 @@ namespace Finexa.Domain.Entities
 
         public void CalculateLoan()
         {
-            decimal totalInterest = this.Amount.Amount * this.InterestRate;
-            decimal totalAmount = this.Amount.Amount + totalInterest;
-            decimal AmountPerInstallment = totalAmount / this.Deadline;
-            for (int i = 1; i <= this.Deadline; i++)
+            _installments.Clear();
+            if (this.Method == CalculationMethod.French)
             {
-                Money money = new Money(AmountPerInstallment, "DOP");
-                Installment payment = new Installment(money, i);
-                _installments.Add(payment);
+                decimal totalInterest = this.Amount.Amount * this.InterestRate;
+                decimal totalAmount = this.Amount.Amount + totalInterest;
+                decimal AmountPerInstallment = totalAmount / this.Deadline;
+                for (int i = 1; i <= this.Deadline; i++)
+                {
+                    Money money = new Money(AmountPerInstallment, "DOP");
+                    Installment payment = new Installment(money, i);
+                    _installments.Add(payment);
+                }
             }
+            else if (this.Method == CalculationMethod.German)
+            {
+                decimal principal = this.Amount.Amount;
+                decimal capitalAmortization = principal / this.Deadline;
+                decimal outstandingBalance = principal;
+
+                for (int i = 1; i <= this.Deadline; i++)
+                {
+                    decimal interesPeriodo = outstandingBalance * this.InterestRate;
+
+                    decimal montoCuota = capitalAmortization + interesPeriodo;
+
+                    Money money = new Money(montoCuota, "DOP");
+                    Installment payment = new Installment(money, i);
+                    _installments.Add(payment);
+
+                    outstandingBalance -= capitalAmortization;
+                }
+            }
+        }
+
+        public void AddGuarantor(Guarantor guarantor)
+        {
+            if (guarantor == null) throw new ArgumentNullException(nameof(guarantor), "Garante invalido");
+            _guarantors.Add(guarantor);
         }
     }
 }
