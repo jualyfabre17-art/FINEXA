@@ -8,6 +8,5 @@ namespace Finexa.Domain.Enums
     {
         German,
         French,
-        Usa
     }
 }

@@ -2,6 +2,7 @@
   <Project Path="../Finexa.Application/Finexa.Application.csproj" Id="46ce84a3-96f6-4142-91ab-1448fd03ae65" />
   <Project Path="../Finexa.Domain/Finexa.Domain.csproj" Id="6d73307f-fc89-414c-b21b-34b316ce8e81" />
   <Project Path="../Finexa.Infrastructure/Finexa.Infrastructure.csproj" Id="64c9bd8e-b89a-47c3-bdd6-73890706da06" />
+  <Project Path="../Finexa.Tests/Finexa.Tests.csproj" Id="8d21bce6-9b00-49be-9a14-50d4a7211b04" />
   <Project Path="../Finexa.Web/Finexa.Web.csproj" Id="0396caa7-d2b8-4838-8536-6554fbcf6af2" />
   <Project Path="Finexa.Api.csproj" />
 </Solution>
