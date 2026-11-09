@@ -10,6 +10,8 @@ namespace Finexa.Domain.Entities
         public int Id { get; private set; }
         public Money Amount { get; private set; }
         public int Number { get; private set; }
+        public bool IsPaid { get; private set; }
+        public DateTime DueDate { get; private set; }
 
         private Installment() { }
 
@@ -26,5 +28,6 @@ namespace Finexa.Domain.Entities
             Amount = installmentamount;
             Number = number;
         }
+        internal void MarkAsPaid() => IsPaid = true;
     }
 }

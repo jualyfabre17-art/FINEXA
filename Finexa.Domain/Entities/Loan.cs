@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Security.Principal;
 using System.Text;
 using Finexa.Domain.Enums;
+using Finexa.Domain.Exceptions;
 using Finexa.Domain.ValueObjects;
 
 namespace Finexa.Domain.Entities
@@ -85,5 +86,35 @@ namespace Finexa.Domain.Entities
             if (guarantor == null) throw new ArgumentNullException(nameof(guarantor), "Garante invalido");
             _guarantors.Add(guarantor);
         }
+
+        public void RegisterPayment (decimal paymentAmount, DateTime paymentDate)
+        {
+            if (Status != Status.Active)
+                throw new DomainException($"Prestamo {Status}: no admite pagos");
+
+            var pendingBalance = _installments.FirstOrDefault(i => !i.IsPaid)
+                ?? throw new DomainException("Sin pagos pendiente");
+
+            if (paymentAmount < pendingBalance.Amount.Amount)
+                throw new DomainException($"Amount {paymentAmount} is invalid.");
+            
+            pendingBalance.MarkAsPaid();
+
+            if (_installments.All(i => i.IsPaid))
+                Status = Status.Payed;
+        }
+
+        public void CancelLoan()
+        {
+            if (_installments.Any(i => i.IsPaid))
+                throw new DomainException("No es posible cancelar, ya hay un pago realizado");
+            
+            Status = Status.Cancelled;
+        }
+
+        public decimal OutstandingBalance() => _installments.Where(i => !i.IsPaid).Sum(i => i.Amount.Amount);
+
+        public IReadOnlyCollection<Installment> Expired(DateTime currentDate) =>
+            _installments.Where(i => !i.IsPaid && i.DueDate < currentDate).ToList();
     }
 }
