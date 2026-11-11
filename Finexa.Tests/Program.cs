@@ -41,15 +41,14 @@ Console.WriteLine($"Suma Capital Frances (60 meses): {tablaExtrema.Sum(f => f.Pr
 
 var tablaExtremaAleman = germanMethod.CalculateAmortization(50000m, 0.60m, 60, new DateTime(2024, 1, 1));
 Console.WriteLine($"Suma Capital Aleman (60 meses): {tablaExtremaAleman.Sum(f => f.Principal)}");*/
-
-
-using Finexa.Domain.Calculations; 
+using Finexa.Application.Interfaces;
+using Finexa.Application.Repositories;
 using Finexa.Domain.Entities;
-using Finexa.Domain;
-using Finexa.Domain.Interfaces;
+using Finexa.Domain.Enums;
+using Finexa.Domain.Exceptions;
 using Finexa.Domain.ValueObjects;
 
-Console.WriteLine("--- INICIO PRUEBAS ---\n");
+/*Console.WriteLine("--- INICIO PRUEBAS ---\n");
 
 Console.WriteLine("1. SIMULANDO PRESTAMO DE 3 CUOTAS (Flujo Feliz)");
 var prestamo = new Loan(1, new Money(100, "DOP"), 0.12m, 3);
@@ -121,4 +120,75 @@ catch (Exception ex)
     Console.WriteLine($"ERROR INESPERADO: {ex.Message}\n");
 }
 
-Console.WriteLine("--- FIN PRUEBAS ---");
+Console.WriteLine("--- FIN PRUEBAS ---");*/
+Console.WriteLine("¡El programa se ha iniciado correctamente!");
+
+
+public class FakeDateTimeProvider : IDateTimeProvider
+{
+    public DateTime UtcNow => DateTime.UtcNow;
+}
+
+public class FakeUnitOfWork : IUnitOfWork
+{
+    public Task<int> SaveChangesAsync()
+    {
+        return Task.FromResult(1);
+    }
+}
+
+public class FakePartnerRepository : IPartnerRepository
+{
+    private readonly List<Partner> _partners = new();
+
+    public Task AddPartnerAsync(Partner partner, CancellationToken ct = default)
+    {
+        _partners.Add(partner);
+        return Task.CompletedTask;
+    }
+
+    public Task<Partner?> GetByIdAsync(int id, CancellationToken ct = default)
+    {
+        var partner = _partners.FirstOrDefault(p => p.Id == id);
+        return Task.FromResult(partner);
+    }
+
+    public Task<IReadOnlyList<Partner>> GetByIdsAsync(IEnumerable<int> ids, CancellationToken ct = default)
+    {
+        var result = _partners.Where(p => ids.Contains(p.Id)).ToList();
+
+        return Task.FromResult<IReadOnlyList<Partner>>(result);
+    }
+}
+
+public class FakeLoanRepository : ILoanRepository
+{
+    private readonly List<Loan> _loans = new();
+
+    public Task AddLoanAsync(Loan loan, CancellationToken ct = default)
+    {
+        _loans.Add(loan);
+        return Task.CompletedTask;
+    }
+
+    public Task<int> CountPartnerLoanAsync(int partnerId, CancellationToken ct = default)
+    {
+        var count = _loans.Count(l => l.PartnerId == partnerId && l.Status == Status.Active);
+        return Task.FromResult(count);
+    }
+
+    public Task<Loan?> GetLoanByIdAsync(int id, CancellationToken ct = default)
+    {
+        var loan = _loans.FirstOrDefault(l => l.Id == id);
+        return Task.FromResult(loan);
+    }
+
+    public Task<IReadOnlyList<Loan>> ListOverdueLoansAsync(DateTime dueDate, CancellationToken ct = default)
+    {
+        var result = _loans.Where(l =>
+            l.Installments.Any(i => !i.IsPaid && i.DueDate < dueDate)
+        ).ToList();
+
+        return Task.FromResult<IReadOnlyList<Loan>>(result);
+    }
+}

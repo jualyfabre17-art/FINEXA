@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Finexa.Application\Finexa.Application.csproj" />
     <ProjectReference Include="..\Finexa.Domain\Finexa.Domain.csproj" />
   </ItemGroup>
 

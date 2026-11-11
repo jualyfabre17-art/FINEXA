@@ -10,6 +10,7 @@ namespace Finexa.Domain.Entities
 {
     public class Loan
     {
+        public int Id { get; private set; }
         public int PartnerId { get; private set; }
         public Money Amount { get; private set; }
         public decimal InterestRate { get; private set; }
