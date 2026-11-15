@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Finexa.Application.Common.Finexa.Application.Common;
 using Finexa.Application.Interfaces;
 using Finexa.Application.Repositories;
 using Finexa.Domain.Entities;
@@ -9,7 +8,7 @@ using Finexa.Domain.ValueObjects;
 
 namespace Finexa.Application.Common
 {
-    public class CreatePartnerCommandHandler : ICommandHandler<CreatePartnerCommand, int>
+    public sealed class CreatePartnerCommandHandler : ICommandHandler<CreatePartnerCommand, int>
     {
         private readonly IPartnerRepository _partnerRepository;
         private readonly IUnitOfWork _unitOfWork;

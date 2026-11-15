@@ -40,7 +40,8 @@ var tablaExtrema = frenchMethod.CalculateAmortization(50000m, 0.60m, 60, new Dat
 Console.WriteLine($"Suma Capital Frances (60 meses): {tablaExtrema.Sum(f => f.Principal)}"); 
 
 var tablaExtremaAleman = germanMethod.CalculateAmortization(50000m, 0.60m, 60, new DateTime(2024, 1, 1));
-Console.WriteLine($"Suma Capital Aleman (60 meses): {tablaExtremaAleman.Sum(f => f.Principal)}");*/
+Console.WriteLine($"Suma Capital Aleman (60 meses): {tablaExtremaAleman.Sum(f => f.Principal)}");
+
 using Finexa.Application.Interfaces;
 using Finexa.Application.Repositories;
 using Finexa.Domain.Entities;
@@ -120,7 +121,7 @@ catch (Exception ex)
     Console.WriteLine($"ERROR INESPERADO: {ex.Message}\n");
 }
 
-Console.WriteLine("--- FIN PRUEBAS ---");*/
+Console.WriteLine("--- FIN PRUEBAS ---");
 Console.WriteLine("¡El programa se ha iniciado correctamente!");
 
 
@@ -191,4 +192,73 @@ public class FakeLoanRepository : ILoanRepository
 
         return Task.FromResult<IReadOnlyList<Loan>>(result);
     }
+}*/
+
+using System;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection; 
+using Finexa.Application.Common;
+using Finexa.Application.Interfaces;
+using Finexa.Application.Repositories;
+using Finexa.Tests.Fakes;
+
+
+var services = new ServiceCollection();
+
+services.AddSingleton<IPartnerRepository, FakePartnerRepository>();
+services.AddSingleton<ILoanRepository, FakeLoanRepository>();
+services.AddSingleton<IPaymentRepository, FakePaymentRepository>();
+services.AddSingleton<IMovementRepository, FakeMovementRepository>();
+services.AddSingleton<IUnitOfWork, FakeUnitOfWork>();
+
+services.AddScoped<ICommandHandler<CreatePartnerCommand, int>, CreatePartnerCommandHandler>();
+services.AddScoped<ICommandHandler<DepositSavingsCommand>, DepositSavingsCommandHandler>();
+services.AddScoped<ICommandHandler<RequestLoanCommand, int>, RequestLoanCommandHandler>();
+
+// Registrar Mediador
+services.AddScoped<IMediator, Mediator>();
+
+var serviceProvider = services.BuildServiceProvider();
+var mediator = serviceProvider.GetRequiredService<IMediator>();
+
+Console.WriteLine("--- INICIANDO PRUEBAS DE COMANDOS ---\n");
+
+Console.WriteLine("1. TEST EXITO: Crear Socio");
+var createCommand = new CreatePartnerCommand { Name = "Juan Perez", IdDocument = 123456, InitialSavingsAmount = 500 };
+int newPartnerId = await mediator.SendAsync<CreatePartnerCommand, int>(createCommand);
+Console.WriteLine($"-> Exito. ID del nuevo socio: {newPartnerId}\n");
+
+
+Console.WriteLine("2. TEST NO ENCONTRADO: Depositar a socio que no existe");
+try
+{
+    var depositCommand = new DepositSavingsCommand { PartnerId = 9999, Amount = 100, TransactionDate = DateTime.Now };
+    await mediator.SendAsync(depositCommand);
 }
+catch (Exception ex)
+{
+    Console.WriteLine($"-> Excepcion capturada ({ex.GetType().Name}): {ex.Message}\n");
+}
+
+
+Console.WriteLine("3. TEST REGLA VIOLADA: Prestamo mayor a 3 veces los ahorros");
+try
+{
+    var loanCommand = new RequestLoanCommand
+    {
+        PartnerId = newPartnerId,
+        Amount = 5000,
+        InterestRate = 0.1m,
+        Deadline = 12,
+        StartDate = DateTime.Now
+    };
+
+    await mediator.SendAsync<RequestLoanCommand, int>(loanCommand);
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"-> Excepción capturada ({ex.GetType().Name}): {ex.Message}\n");
+}
+
+Console.WriteLine("Presiona Enter para salir...");
+Console.ReadLine();
