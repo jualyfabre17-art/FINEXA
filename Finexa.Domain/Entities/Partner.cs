@@ -30,5 +30,25 @@ namespace Finexa.Domain.Entities
             IdDocument = idDocument;
             AccumulatedSavings = initialSavings;
         }
+        public void UpdateDetails(string name, int idDocument)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("El nombre no puede estar vacio.", nameof(name));
+            if (idDocument <= 0)
+                throw new ArgumentOutOfRangeException(nameof(idDocument), "Documento invalido.");
+
+            Name = name;
+            IdDocument = idDocument;
+        }
+
+        public void Deposit(Money amount)
+        {
+            if (amount == null)
+                throw new ArgumentNullException(nameof(amount), "El monto no puede ser nulo.");
+            if (amount.Amount <= 0)
+                throw new ArgumentException("El monto a depositar debe ser mayor a 0.");
+
+            AccumulatedSavings = new Money(AccumulatedSavings.Amount + amount.Amount, "DOP");
+        }
     }
 }
