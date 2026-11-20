@@ -194,17 +194,9 @@ public class FakeLoanRepository : ILoanRepository
     }
 }*/
 
-using System;
-using System.Threading.Tasks;
-using Finexa.Application.Common;
-using Finexa.Application.Extensions;
-using Finexa.Application.Interfaces;
-using Finexa.Application.Repositories;
-using Finexa.Tests.Fakes;
-using Microsoft.Extensions.DependencyInjection; 
 
 
-var services = new ServiceCollection();
+/*var services = new ServiceCollection();
 
 services.AddSingleton<IPartnerRepository, FakePartnerRepository>();
 services.AddSingleton<ILoanRepository, FakeLoanRepository>();
@@ -263,4 +255,84 @@ catch (Exception ex)
 }
 
 Console.WriteLine("Presiona Enter para salir...");
-Console.ReadLine();
+Console.ReadLine();*/
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Finexa.Application.Common;
+using Finexa.Application.DTOs;
+using Finexa.Application.Handlers;
+using Finexa.Application.Interfaces;
+using Finexa.Application.Mappings;
+using Finexa.Application.Queries;
+using Finexa.Application.Repositories;
+using Finexa.Domain.Entities;
+using Finexa.Domain.ValueObjects;
+using Finexa.Tests.Fakes;
+using Microsoft.Extensions.DependencyInjection;
+
+namespace Finexa.Tests
+{
+    public class Program
+    {
+        public static async Task Main(string[] args)
+        {
+            var services = new ServiceCollection();
+
+            services.AddSingleton<IPartnerRepository, FakePartnerRepository>();
+            services.AddSingleton<ILoanRepository, FakeLoanRepository>();
+            services.AddSingleton<IUnitOfWork, FakeUnitOfWork>();
+            services.AddSingleton<IDateTimeProvider, FakeDateTimeProvider>();
+
+            services.AddScoped<IMediator, Mediator>();
+            services.AddScoped<IQueryHandler<GetLoanDetailQuery, LoanDetailDto>, GetLoanDetailQueryHandler>();
+            services.AddScoped<IQueryHandler<GetPartnerLoansQuery, List<LoanDetailDto>>, GetPartnerLoansQueryHandler>();
+            services.AddScoped<IQueryHandler<GetOverdueLoansQuery, List<OverdueLoanDto>>, GetOverdueLoansQueryHandler>();
+
+            services.AddAutoMapper(cfg => cfg.AddProfile<LoanMappingProfile>());
+            services.AddLogging(); 
+
+            var serviceProvider = services.BuildServiceProvider();
+            var mediator = serviceProvider.GetRequiredService<IMediator>();
+
+
+            Console.WriteLine("--- INICIANDO PRUEBAS DE CONSULTAS ---");
+
+            var fakeLoanRepo = serviceProvider.GetRequiredService<ILoanRepository>();
+
+            var testLoan = new Loan(1, new Money(1000, "DOP"), 0.10m, 3);
+            testLoan.CalculateLoan();
+
+            var installment1 = testLoan.Installments.First(i => i.Number == 1);
+            var installment2 = testLoan.Installments.First(i => i.Number == 2);
+            testLoan.RegisterPayment(installment1.Amount.Amount, DateTime.Now);
+            testLoan.RegisterPayment(installment2.Amount.Amount, DateTime.Now);
+
+            await fakeLoanRepo.AddLoanAsync(testLoan);
+
+            Console.WriteLine("1. TEST QUERY: Detalle de Prestamo Parcialmente Pagado");
+            try
+            {
+                var query = new GetLoanDetailQuery { LoanId = testLoan.Id };
+
+                var loanDetailDto = await mediator.SendQueryAsync<GetLoanDetailQuery, LoanDetailDto>(query);
+
+                Console.WriteLine($"-> ID Prestamo: {loanDetailDto.Id}");
+                Console.WriteLine($"-> Saldo Pendiente: {loanDetailDto.PendingBalance}");
+                Console.WriteLine($"-> Total Cuotas: {loanDetailDto.Installments.Count}");
+
+                var cuotasPagadas = loanDetailDto.Installments.Count(i => i.IsPaid);
+                Console.WriteLine($"-> Cuotas Pagadas: {cuotasPagadas}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"-> ERROR: {ex.Message}");
+            }
+
+            Console.WriteLine("\nPresiona Enter para salir...");
+            Console.ReadLine();
+        }
+    }
+}
