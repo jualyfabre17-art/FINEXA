@@ -4,6 +4,7 @@ using System.Text;
 using Finexa.Application.Repositories;
 using Finexa.Domain.Entities;
 using Finexa.Domain.Enums;
+using Finexa.Application.Interfaces;
 
 namespace Finexa.Tests.Fakes
 {
@@ -38,6 +39,10 @@ namespace Finexa.Tests.Fakes
             return Task.FromResult<IReadOnlyList<Loan>>(result);
         }
 
-        public Task<Partner?> GetByPartnerIdAsync(int partnerId, CancellationToken ct = default) { }
+        public Task<IReadOnlyList<Loan>> GetByPartnerIdAsync(int partnerId, CancellationToken ct = default)
+        {
+            var result = Loans.Where(l => l.PartnerId == partnerId).ToList();
+            return Task.FromResult<IReadOnlyList<Loan>>(result);
+        }
     }
 }

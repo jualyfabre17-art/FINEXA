@@ -9,7 +9,7 @@ namespace Finexa.Application.Repositories
     {
         Task<int> CountPartnerLoanAsync(int partnerId, CancellationToken ct = default);
         Task<Loan?> GetLoanByIdAsync(int id,  CancellationToken ct = default);
-        Task<Partner?> GetByPartnerIdAsync(int partnerId, CancellationToken ct = default);
+        Task<IReadOnlyList<Loan>> GetByPartnerIdAsync(int partnerId, CancellationToken ct = default);
         Task<IReadOnlyList<Loan>> ListOverdueLoansAsync(DateTime dueDate , CancellationToken ct = default);
         Task AddLoanAsync(Loan loan,  CancellationToken ct = default);
     }
