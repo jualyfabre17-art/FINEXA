@@ -196,11 +196,12 @@ public class FakeLoanRepository : ILoanRepository
 
 using System;
 using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection; 
 using Finexa.Application.Common;
+using Finexa.Application.Extensions;
 using Finexa.Application.Interfaces;
 using Finexa.Application.Repositories;
 using Finexa.Tests.Fakes;
+using Microsoft.Extensions.DependencyInjection; 
 
 
 var services = new ServiceCollection();
@@ -214,6 +215,7 @@ services.AddSingleton<IUnitOfWork, FakeUnitOfWork>();
 services.AddScoped<ICommandHandler<CreatePartnerCommand, int>, CreatePartnerCommandHandler>();
 services.AddScoped<ICommandHandler<DepositSavingsCommand>, DepositSavingsCommandHandler>();
 services.AddScoped<ICommandHandler<RequestLoanCommand, int>, RequestLoanCommandHandler>();
+services.AddApplicationServices();
 
 // Registrar Mediador
 services.AddScoped<IMediator, Mediator>();

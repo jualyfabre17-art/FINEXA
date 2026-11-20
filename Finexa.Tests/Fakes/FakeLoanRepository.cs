@@ -37,5 +37,7 @@ namespace Finexa.Tests.Fakes
 
             return Task.FromResult<IReadOnlyList<Loan>>(result);
         }
+
+        public Task<Partner?> GetByPartnerIdAsync(int partnerId, CancellationToken ct = default) { }
     }
 }
