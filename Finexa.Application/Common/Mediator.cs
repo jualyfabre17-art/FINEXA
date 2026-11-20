@@ -28,5 +28,12 @@ namespace Finexa.Application.Common
             var handler = _serviceProvider.GetRequiredService<ICommandHandler<TCommand>>();
             await handler.HandleAsync(command, ct);
         }
+
+        public async Task<TResult> SendQueryAsync<TQuery, TResult>(TQuery query, CancellationToken ct = default)
+            where TQuery : IQuery<TResult>
+        {
+            var handler = _serviceProvider.GetRequiredService<IQueryHandler<TQuery, TResult>>();
+            return await handler.HandleAsync(query, ct);
+        }
     }
 }

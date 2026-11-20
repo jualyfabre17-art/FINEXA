@@ -12,6 +12,9 @@ namespace Finexa.Application.Interfaces
 
         Task SendAsync<TCommand>(TCommand command, CancellationToken ct = default)
             where TCommand : ICommand;
+
+        Task<TResult> SendQueryAsync<TQuery, TResult>(TQuery query, CancellationToken ct = default)
+            where TQuery : IQuery<TResult>;
     }
 
 }
